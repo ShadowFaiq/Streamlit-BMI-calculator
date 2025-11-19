@@ -252,37 +252,87 @@ def show_health_analysis(calculator):
 
     st.subheader("BMI Trend Analysis")
 
-    # Generate sample data for visualization
-    dates = pd.date_range(start='2024-01-01', end='2024-12-01', freq='M')
+    # FIXED: Generate sample data with proper date handling
+    months = list(range(1, 13))  # Months 1-12
+    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     sample_bmi = [22.5, 22.8, 23.1, 22.9, 23.5, 23.8, 24.1, 24.3, 24.0, 23.8, 23.6, 23.4]
 
+    # Create the plot
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(dates, sample_bmi, marker='o', linewidth=2, markersize=6)
+    
+    # Plot the data
+    ax.plot(months, sample_bmi, marker='o', linewidth=2, markersize=6, color='#1f77b4')
+    
+    # Add reference lines
     ax.axhline(y=18.5, color='red', linestyle='--', alpha=0.7, label='Underweight')
     ax.axhline(y=24.9, color='green', linestyle='--', alpha=0.7, label='Normal')
     ax.axhline(y=29.9, color='orange', linestyle='--', alpha=0.7, label='Overweight')
 
-    ax.fill_between(dates, 18.5, 24.9, alpha=0.2, color='green')
-    ax.fill_between(dates, 25, 29.9, alpha=0.2, color='orange')
-    ax.fill_between(dates, 0, 18.4, alpha=0.2, color='red')
-    ax.fill_between(dates, 30, 40, alpha=0.2, color='darkred')
+    # Add colored regions - FIXED: Use proper x ranges
+    ax.fill_between(months, 18.5, 24.9, alpha=0.2, color='green', label='Healthy Range')
+    ax.fill_between(months, 25, 29.9, alpha=0.2, color='orange', label='Overweight Range')
+    ax.fill_between(months, 0, 18.4, alpha=0.2, color='red', label='Underweight Range')
+    ax.fill_between(months, 30, 40, alpha=0.2, color='darkred', label='Obesity Range')
 
-    ax.set_xlabel('Date')
+    # Format the plot
+    ax.set_xticks(months)
+    ax.set_xticklabels(month_names)
+    ax.set_xlabel('Month (2024)')
     ax.set_ylabel('BMI')
-    ax.set_title('BMI Trend Over Time')
+    ax.set_title('Sample BMI Trend Over Time')
     ax.legend()
     ax.grid(True, alpha=0.3)
-
+    
+    # Adjust layout
+    plt.tight_layout()
+    
+    # Display the plot
     st.pyplot(fig)
 
-    # Health tips based on BMI
-    st.subheader("Health Recommendations")
-
+    # Interactive BMI Calculator in Health Analysis
+    st.subheader("📊 Calculate Your Current BMI")
+    
     col1, col2 = st.columns(2)
+    
+    with col1:
+        current_weight = st.number_input("Your Weight (kg)", min_value=30.0, max_value=200.0, value=70.0, key="health_weight")
+        current_height = st.number_input("Your Height (cm)", min_value=100.0, max_value=250.0, value=170.0, key="health_height")
+    
+    with col2:
+        if st.button("Check My BMI", key="health_bmi_button"):
+            current_bmi = current_weight / ((current_height/100) ** 2)
+            current_bmi = round(current_bmi, 1)
+            
+            # Determine category
+            if current_bmi < 18.5:
+                current_category = "Underweight"
+                color = "#e2e3e5"
+            elif current_bmi < 25:
+                current_category = "Normal weight"
+                color = "#d4edda"
+            elif current_bmi < 30:
+                current_category = "Overweight"
+                color = "#fff3cd"
+            else:
+                current_category = "Obesity"
+                color = "#f8d7da"
+            
+            st.markdown(f"""
+            <div style='background-color: {color}; padding: 20px; border-radius: 10px; text-align: center;'>
+                <h3>Your Current BMI: {current_bmi}</h3>
+                <h4>{current_category}</h4>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # Health tips based on BMI
+    st.subheader("💡 Health Recommendations")
+
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         st.info("""
-        **For Underweight (BMI < 18.5):**
+        **🏋️ For Underweight (BMI < 18.5):**
         - Increase calorie intake with nutrient-dense foods
         - Include strength training exercises
         - Eat more frequent, smaller meals
@@ -291,13 +341,35 @@ def show_health_analysis(calculator):
 
     with col2:
         st.info("""
-        **For Overweight (BMI > 25):**
-        - Create a calorie deficit
-        - Increase physical activity
-        - Focus on whole foods
-        - Stay hydrated
-        - Get adequate sleep
+        **🥗 For Overweight (BMI > 25):**
+        - Create a calorie deficit (500 fewer calories/day)
+        - Increase physical activity (150 mins/week)
+        - Focus on whole foods and vegetables
+        - Stay hydrated and get adequate sleep
         """)
+        
+    with col3:
+        st.info("""
+        **✅ For Healthy Weight (BMI 18.5-24.9):**
+        - Maintain balanced diet and exercise
+        - Regular health check-ups
+        - Stay active with 150 mins exercise/week
+        - Monitor weight monthly
+        """)
+
+    # Additional Health Metrics
+    st.subheader("📋 Additional Health Metrics")
+    
+    metric_col1, metric_col2, metric_col3 = st.columns(3)
+    
+    with metric_col1:
+        st.metric("Water Intake", "2-3 Liters", "Daily Goal")
+    
+    with metric_col2:
+        st.metric("Sleep", "7-9 Hours", "Recommended")
+    
+    with metric_col3:
+        st.metric("Exercise", "150 mins/week", "WHO Standard")
 
 def show_about():
     st.header("ℹ️ About This App")
